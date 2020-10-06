@@ -1,0 +1,94 @@
+# Docker
+# Build a Docker image 
+# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
+
+trigger:
+- develop
+- master
+
+resources:
+- repo: self
+
+variables:
+  tag: '$(Build.BuildNumber)'
+  system_accesstoken: $(System.AccessToken)
+  build_sourcedirectory: $(Build.SourcesDirectory)
+  buildid: $(Build_BuildId)
+  buildnumber: $(Build_BuildNumber)
+  build_definitionname: $(Build.DefinitionName)
+  ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/master') }}: 
+    imagebase: "test"
+  ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}: 
+    imagebase: "prod"
+
+stages:
+- stage: Build
+  displayName: Build image
+  jobs:  
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: Bash@3
+      displayName: Create k8 variables
+      inputs:
+        targetType: 'inline'
+        script: |
+          #Create file
+          CONFIG=$(Build.SourcesDirectory)
+          IMAGEBASE=$(ImageBase)
+          export IMAGE=`echo "$(Build.DefinitionName)" | tr '[:upper:]' '[:lower:]'`
+          export DEPLOYMENT=`echo "${IMAGE//.}"`
+          # set image name
+          echo "##vso[task.setvariable variable=FullImage]${IMAGEBASE}/${IMAGE}"
+          cat > $CONFIG/kubernetesVariables.json <<- "EOF"
+          {
+            "BuildId" : "{{BUILDID}}",
+            "Team": "{{TEAM}}",
+            "BuildNumber" : "{{BUILDNUMBER}}",
+            "Deployment" : "{{DEPLOYMENT}}",
+            "Repo" : "{{REPO}}",
+            "Image" : "{{IMAGE}}"
+          }
+          EOF
+          # Replace annotations
+          sed -i "s/{{TEAM}}/$SYSTEM_TEAMPROJECT/g" kubernetesVariables.json
+          sed -i "s/{{BUILDID}}/$BUILD_BUILDID/g" kubernetesVariables.json
+          sed -i "s/{{BUILDNUMBER}}/$BUILD_BUILDNUMBER/g" kubernetesVariables.json
+          sed -i "s/{{DEPLOYMENT}}/$DEPLOYMENT/g" kubernetesVariables.json
+          sed -i "s/{{IMAGE}}/$IMAGE/g" kubernetesVariables.json
+          sed -i "s/{{REPO}}/$IMAGEBASE/g" kubernetesVariables.json
+
+          # Show results
+          cat kubernetesVariables.json
+    - task: Bash@3
+      displayName: display image name
+      inputs:
+        targetType: 'inline'
+        script: |
+          #update var
+          echo image to build and push: $(FullImage)          
+
+    - task: Docker@2
+      displayName: Build an image
+      inputs:
+        containerRegistry: 'scramnetwork'
+        repository: $(FullImage)
+        command: 'build'
+        Dockerfile: '**/Dockerfile'
+        tags: '$(tag)'
+        arguments: '--build-arg PAT=$(System_AccessToken)'
+    - task: Docker@2
+      displayName: Push image to repository
+      inputs:
+        containerRegistry: 'scramnetwork'
+        repository: '$(FullImage)'
+        command: 'push'
+        tags: '$(tag)'
+    - task: CopyPublishBuildArtifacts@1
+      inputs:
+        CopyRoot: '$(Build.SourcesDirectory)'
+        Contents: 'kubernetesVariables.json'
+        ArtifactName: 'kubernetes'
+        ArtifactType: 'Container'       

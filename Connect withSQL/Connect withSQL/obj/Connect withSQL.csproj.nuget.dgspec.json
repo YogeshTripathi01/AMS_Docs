@@ -1,0 +1,61 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\ytripathi\\Desktop\\Learning\\Connect withSQL\\Connect withSQL\\Connect withSQL.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\ytripathi\\Desktop\\Learning\\Connect withSQL\\Connect withSQL\\Connect withSQL.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\ytripathi\\Desktop\\Learning\\Connect withSQL\\Connect withSQL\\Connect withSQL.csproj",
+        "projectName": "Connect withSQL",
+        "projectPath": "C:\\Users\\ytripathi\\Desktop\\Learning\\Connect withSQL\\Connect withSQL\\Connect withSQL.csproj",
+        "packagesPath": "C:\\Users\\ytripathi\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\ytripathi\\Desktop\\Learning\\Connect withSQL\\Connect withSQL\\obj\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\ytripathi\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "netcoreapp2.2"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {},
+          "https://pkgs.dev.azure.com/alcoholmonitoring/_packaging/ScramVSTS/nuget/v3/index.json": {}
+        },
+        "frameworks": {
+          "netcoreapp2.2": {
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "netcoreapp2.2": {
+          "dependencies": {
+            "Microsoft.NETCore.App": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[2.2.0, )",
+              "autoReferenced": true
+            }
+          },
+          "imports": [
+            "net461"
+          ],
+          "assetTargetFallback": true,
+          "warn": true
+        }
+      }
+    }
+  }
+}

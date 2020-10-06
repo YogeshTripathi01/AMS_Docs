@@ -1,0 +1,58 @@
+
+BEGIN
+DECLARE @SubAccountId UNIQUEIDENTIFIER ;
+DECLARE @ParentAccountId UNIQUEIDENTIFIER ='0583E354-2711-433F-9037-2C7839F77A4F' ;
+DECLARE @ApplicationUserKey BIGINT 
+DECLARE @CuurrentDate DATETIME = GETUTCDATE() ;
+Select @ApplicationUserKey = APPLICATION_USER_KEY from ApplicationUSer Where APPLICATION_USER_USERNAME like 'System%'
+
+DECLARE  @SubAccount TABLE (SubAccountId UNIQUEIDENTIFIER)
+DECLARE @Court TABLE  (CourtId BIGINT,  CourtName nvarchar(300))
+DECLARE @Judge TABLE  (JudgeId BIGINT,  JudgeFirstName VARCHAR(300),JudgeMiddleName VARCHAR(300), JudgeLastName VARCHAR(300), JudgePhoneNumber VARCHAR(300), JudgeTypeId smallint, JudgeTypeOther nvarchar(300))
+Declare @CourtJudgeMapping TABLE (CourtName VARCHAR(100) ,JudgeFirstName   VARCHAR(300),JudgeMiddleName VARCHAR(300), JudgeLastName VARCHAR(300), JudgePhoneNumber VARCHAR(300), JudgeTypeId smallint, JudgeTypeOther nvarchar(300))
+
+
+INSERT INTO @SubAccount 
+Select Account_id FROM Account Where ACCOUNT_PARENT_ID=@ParentAccountId
+
+WHILE EXISTS (Select * fROM @SubAccount)
+BEGIN
+       SELECT TOP 1 @SubAccountId = SubAccountId FROM  @SubAccount 
+       
+       Insert into Court (AccountId,CourtTypeId,CourtName,StateId,CountyId,City,Address,CourtTypeOther,IsActive,CreatedBy,CreatedOn,LastModifiedBy,LastModifiedOn)
+       output inserted.CourtId , inserted.CourtName  into @Court (CourtId,  CourtName)
+       Select @SubAccountId,CourtTypeId,CourtName,StateId,CountyId,City,Address,CourtTypeOther,IsActive,@ApplicationUserKey,@CuurrentDate,@ApplicationUserKey,@CuurrentDate 
+       from Court
+       Where AccountId = @ParentAccountId AND IsActive =1-- ParentAccountId
+
+       Insert into Judge (AccountId,JudgeTypeId,JudgeFirstName,JudgeMiddleName,JudgeLastName,JudgePhoneNumber, JudgeTypeOther,IsActive,CreatedBy,CreatedOn,LastModifiedBy,LastModifiedOn )
+       output inserted.JudgeId , inserted.JudgeFirstName, inserted.JudgeMiddleName, inserted.JudgeLastName, inserted.JudgePhoneNumber, inserted.JudgeTypeId, inserted.JudgeTypeOther into @Judge (JudgeId,JudgeFirstName,JudgeMiddleName,JudgeLastName,JudgePhoneNumber,JudgeTypeId, JudgeTypeOther)
+       Select  @SubAccountId,JudgeTypeId,JudgeFirstName,JudgeMiddleName,JudgeLastName,JudgePhoneNumber,JudgeTypeOther,IsActive,@ApplicationUserKey,@CuurrentDate,@ApplicationUserKey,@CuurrentDate from Judge
+       Where AccountId = @ParentAccountId AND IsActive =1 --ParentAccountId
+
+       INSERT INTO @CourtJudgeMapping
+       Select distinct CourtName, JudgeFirstName, JudgeMiddleName, JudgeLastName , JudgePhoneNumber,JudgeTypeId, JudgeTypeOther
+       From CourtJudgeMapping cjm 
+        inner join Court c on cjm.CourtId = c.CourtId
+       inner join judge j on cjm.JudgeId = j.JudgeId
+       Where  j.AccountId = @ParentAccountId  and c.AccountId = @ParentAccountId AND J.IsActive =1 AND C.IsActive =1
+
+       INSERT INTO CourtJudgeMapping
+         Select distinct CourtId,JudgeId, @ApplicationUserKey ,@CuurrentDate
+       From @CourtJudgeMapping cjm 
+        inner join @Court c on cjm.CourtName = c.CourtName
+       inner join @judge j on cjm.JudgeFirstName = j.JudgeFirstName AND  
+       (cjm.JudgeMiddleName = j.JudgeMiddleName Or (j.JudgeMiddleName IS NULL AND  cjm.JudgeMiddleName IS NULL) )
+       AND (cjm.JudgeLastName = j.JudgeLastName  OR (j.JudgeLastName IS NULL AND  cjm.JudgeLastName IS NULL)) 
+        AND (cjm.JudgePhoneNumber = j.JudgePhoneNumber OR (j.JudgePhoneNumber IS NULL AND  cjm.JudgePhoneNumber IS NULL))
+         AND (cjm.JudgeTypeId = j.JudgeTypeId OR (j.JudgeTypeId IS NULL AND  cjm.JudgeTypeId IS NULL))
+         AND (cjm.JudgeTypeOther = j.JudgeTypeOther OR (j.JudgeTypeOther IS NULL AND  cjm.JudgeTypeOther IS NULL))
+
+
+       DELETE FROM @SubAccount Where SubAccountId = @SubAccountId
+       DELETE FROM @Court
+       DELETE FROM @Judge
+       DELETE FROM @CourtJudgeMapping
+END
+END
+

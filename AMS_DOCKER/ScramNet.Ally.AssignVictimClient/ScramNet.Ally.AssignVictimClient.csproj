@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UserSecretsId>dotnet-ScramNet.Ally.AssignVictimClient-F931E9E1-BF00-4A50-9985-87D5076ADDBA</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CloudNative.CloudEvents" Version="1.3.80" />
+    <PackageReference Include="Microsoft.Azure.ServiceBus" Version="4.1.2" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.1.2" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.8" />
+    <PackageReference Include="MongoDB.Driver" Version="2.10.2" />
+    <PackageReference Include="Mossharbor.AzureWorkArounds.ServiceBus" Version="1.0.20" />
+    <PackageReference Include="ScramNet.Configuration.KeyVault" Version="2.0.19225.1" />
+  </ItemGroup>
+</Project>
